@@ -31,6 +31,7 @@ object Main extends JFXApp {
     }
     val fixed = new FixedSizePaddingPane(want_w_mm, want_h_mm)
 
+    import BImplicits._
     fixed.zoompane.group.children.setAll(
       new VBox (
         new Text{
@@ -38,16 +39,19 @@ object Main extends JFXApp {
           style = "-fx-font: normal 14pt 'Migu 1M'"
           fill  = Color.Blue
         },
-        new BeamerBox(new Text{
-                        text = "This is title"
-                        style = "-fx-font: normal 11pt 'Migu 1P'"
-                        fill  = Color.Green
-                      },
-                      BItemize {new Text("-> ")}
-                        - new Text("hello")
-                        - new Text("new")
-                        - new Text("world")
-        )))
+        BBox ("Following is itemize") (
+          BItemize {"-> "}
+            - "hello"
+            - "new"
+            - "world"
+        ),
+        BBox ("Following is enumerate") (
+          BEnum {(i: Int) => s"$i: "}
+            - "hello"
+            - "new"
+            - "world"
+        )
+      ))
 
     scene = new Scene {
       root = fixed

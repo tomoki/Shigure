@@ -12,15 +12,21 @@ object BeamerConstants {
   val beamerBoxTitle = "beamer-box-title"
 }
 
-class BeamerBox(title: Node, boxed: Node)
-    extends VBox(Seq(title, {
-                       title.getStyleClass().add(BeamerConstants.beamerBoxTitle)
-                       AnchorPane.setAnchors(boxed, 10, 10, 10, 10)
-                       new AnchorPane {
-                         children = boxed
-                       }
-                     }): _*) {
+class BBox(title: Node) extends VBox {
   style = "-fx-background-color: pink"
+  addItem(title)
+
+  def addItem(n: Node) : BBox = {
+    children.add(n)
+    this
+  }
+  def apply(n: Node) : BBox = addItem(n)
+  def apply(n: => Node) : BBox = addItem(n)
+}
+
+object BBox {
+  def apply(title: Node) : BBox =
+    new BBox(title)
 }
 
 class BItemize(ballet: => Node) extends VBox {
@@ -34,4 +40,24 @@ class BItemize(ballet: => Node) extends VBox {
 object BItemize {
   def apply(ballet: => Node) : BItemize =
     new BItemize(ballet)
+}
+
+class BEnum(ballet: Int => Node) extends VBox {
+  def addItem(n: Node) : BEnum = {
+    children.add(new TextFlow(ballet(children.size()), n))
+    this
+  }
+  def -(n: Node) = addItem(n)
+}
+
+object BEnum {
+  def apply(ballet: Int => Node) : BEnum =
+    new BEnum(ballet)
+}
+
+import scala.language.implicitConversions
+object BImplicits {
+  implicit def convertToTextFlow(s: String) : TextFlow = {
+    new TextFlow(new Text(s))
+  }
 }
