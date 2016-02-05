@@ -23,10 +23,15 @@ class BeamerBox(title: Node, boxed: Node)
   style = "-fx-background-color: pink"
 }
 
-// JavaFX does not support duplicate method...
-class BeamerItemize(ballet: () => Node)(children: Node*)
-    extends VBox(children.map(
-                   (c: Node) => {
-                     new TextFlow(ballet(), c)
-                   }): _*) {
+class BItemize(ballet: => Node) extends VBox {
+  def addItem(n: Node) : BItemize = {
+    children.add(new TextFlow(ballet, n))
+    this
+  }
+  def -(n: Node) = addItem(n)
+}
+
+object BItemize {
+  def apply(ballet: => Node) : BItemize =
+    new BItemize(ballet)
 }

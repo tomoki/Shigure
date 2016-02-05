@@ -34,7 +34,6 @@ class FixedSizePane (width_in_mm  : Double,
     val hpx     = Util.mmToPx(height_in_mm, Screen.primary.dpi).toFloat
     val sfactor = (to_width / wpx) min (to_height / hpx)
 
-    println(group.getLayoutBounds)
     val _ = group.getTransforms().setAll(
       Transform.scale(sfactor,
                       sfactor,
@@ -62,9 +61,6 @@ class FixedSizePaddingPane (width_in_mm  : Double,
         (to_height * rat, to_height)
       else
         (to_width, to_width / rat)
-
-    println("tw, th = " + (to_width, to_height).toString)
-    println("aw, ah = " + (aw, ah).toString)
 
     zoompane.resize(aw, ah)
     AnchorPane.setTopAnchor(zoompane,    (to_height-ah)/2)

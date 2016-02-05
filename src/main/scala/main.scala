@@ -43,11 +43,11 @@ object Main extends JFXApp {
                         style = "-fx-font: normal 11pt 'Migu 1P'"
                         fill  = Color.Green
                       },
-                      new BeamerItemize(() => new Text("-> "))(
-                        new Text("This"),
-                        new Text("is"),
-                        new Text("itemize")
-                      ))))
+                      BItemize {new Text("-> ")}
+                        - new Text("hello")
+                        - new Text("new")
+                        - new Text("world")
+        )))
 
     scene = new Scene {
       root = fixed
