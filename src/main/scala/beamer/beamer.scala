@@ -40,6 +40,8 @@ class BItemize(ballet: => Node) extends VBox {
 object BItemize {
   def apply(ballet: => Node) : BItemize =
     new BItemize(ballet)
+  def -(n: Node) : BItemize =
+    new BItemize({new Text("")}).addItem(n)
 }
 
 class BEnum(ballet: Int => Node) extends VBox {
@@ -61,3 +63,5 @@ object BImplicits {
     new TextFlow(new Text(s))
   }
 }
+
+

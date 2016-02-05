@@ -45,6 +45,12 @@ object Main extends JFXApp {
             - "new"
             - "world"
         ),
+        BBox ("Following is itemize2") (
+          BItemize
+            - "hello"
+            - "new"
+            - "world"
+        ),
         BBox ("Following is enumerate") (
           BEnum {(i: Int) => s"$i: "}
             - "hello"
@@ -53,6 +59,7 @@ object Main extends JFXApp {
         )
       ))
 
+    
     scene = new Scene {
       root = fixed
     }
