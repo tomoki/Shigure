@@ -1,4 +1,4 @@
-package scalpre
+package net.pushl.shigure
 
 import scalafx.application.JFXApp
 import scalafx.application.JFXApp.PrimaryStage
@@ -11,78 +11,50 @@ import scalafx.stage.Screen
 import scalafx.scene.control._
 import scalafx.scene.transform._
 
-import beamer._
-import scalpre.util.Util
+import net.pushl.shigure.beamer._
+import net.pushl.shigure.util.Util
 
+import javax.script.ScriptEngineManager
 
+import net.pushl.shigure.general._
 object Main extends JFXApp {
-  val want_w_mm = 128
-  val want_h_mm = 96
+  val want_w_mm = 160.0
+  val want_h_mm = 90.0
 
-  // val want_w = 1920.0
-  // val want_h = 1080.0
   stage = new PrimaryStage {
     title = "Scalpre"
 
-    width  onChange scale
-    height onChange scale
-
-    // no need to take argument
-    def scale() : Unit = {
-      val want_w = Util.mmToPx(want_w_mm, Screen.primary.dpi)
-      val want_h = Util.mmToPx(want_h_mm, Screen.primary.dpi)
-
-      val scalefactor = (width() / want_w) min (height() / want_h)
-      val rat = want_w / want_h
-      val (aw, ah) =
-        if(width() / height() > rat)
-          (height() * rat, height())
-        else
-          (width(), width() / rat)
-
-      AnchorPane.setTopAnchor(zoompane, (height()-ah)/2)
-      AnchorPane.setBottomAnchor(zoompane, (height()-ah)/2)
-      AnchorPane.setLeftAnchor(zoompane, (width()-aw)/2)
-      AnchorPane.setRightAnchor(zoompane, (width()-aw)/2)
-
-      val _ = group.getTransforms().setAll(
-        Transform.scale(scalefactor,
-                        scalefactor,
-                        group.getLayoutBounds.getMinX,
-                        group.getLayoutBounds.getMinY)
-      )
+    width  onChange onScale
+    height onChange onScale
+    def onScale() : Unit = {
+      fixed.resize(width.value, height.value)
     }
-    val titlep = new TextFlow(
-      new Text{
-        text  = "The Extensible Type-Safe? Presentation Software"
-        style = "-fx-font: normal 14pt 'Migu 1M'"
-        fill  = Color.Blue
-      }
-    );
-    val zoompane = new VBox()
+    val fixed = new FixedSizePaddingPane(want_w_mm, want_h_mm)
 
-    val group    = new Group(
+    fixed.zoompane.group.children.setAll(
       new VBox (
-        titlep,
-        new HBox(
+        new Text{
+          text  = "Shigure: Extensible Presentation Tool Written in Scala"
+          style = "-fx-font: normal 14pt 'Migu 1M'"
+          fill  = Color.Blue
+        },
         new BeamerBox(new Text{
                         text = "This is title"
                         style = "-fx-font: normal 11pt 'Migu 1P'"
                         fill  = Color.Green
                       },
-                      new BeamerItemize(() => new Text("->"))(
-                        new Text("おなかすいた"),
-                        new Text("World"),
-                        new Text("!")
-                      )))))
-    zoompane.children.add(group)
+                      new BeamerItemize(() => new Text("-> "))(
+                        new Text("This"),
+                        new Text("is"),
+                        new Text("itemize")
+                      ))))
 
-    AnchorPane.setAnchors(zoompane,100,0,0,0);
-    val anchor = new AnchorPane {
-      children = Seq(zoompane)
-    }
     scene = new Scene {
-      root = anchor
+      root = fixed
     }
+    // val e = new ScriptEngineManager().getEngineByName("scala")
+    // e.asInstanceOf[scala.tools.nsc.interpreter.IMain].settings.usejavacp.value = true
+    // e.put("group: Group", group)
+    // println(e.eval("import scalafx.scene.text._; group.children.add(new Text(\"a\"))"))
   }
 }

@@ -1,10 +1,12 @@
 libraryDependencies += "org.scalatest" %% "scalatest" % "2.2.4" % "test"
 libraryDependencies += "org.scalacheck" %% "scalacheck" % "1.12.5" % "test"
 
+libraryDependencies += "org.scala-lang" % "scala-compiler" % scalaVersion.value
+libraryDependencies += "org.scala-lang" % "scala-library"  % scalaVersion.value
 libraryDependencies += "org.scalafx" %% "scalafx" % "8.0.60-R9"
 
 scalaVersion := "2.11.7"
-name := "Scalpre"
+name := "Shigure"
 
 scalacOptions ++= Seq(
   "-deprecation",

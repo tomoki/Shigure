@@ -1,4 +1,4 @@
-package scalpre.beamer
+package net.pushl.shigure.beamer
 
 import scalafx.scene._
 import scalafx.scene.text._
