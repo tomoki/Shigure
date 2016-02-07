@@ -33,40 +33,26 @@ import net.pushl.shigure.general._
 //     val fixed = new FixedSizePaddingPane(want_w_mm, want_h_mm)
 
 //     import BImplicits._
-//     fixed.zoompane.group.children.setAll(
-//       new VBox (
-//         new Text{
-//           text  = "Shigure: Extensible Presentation Tool Written in Scala"
-//           style = "-fx-font: normal 14pt 'Migu 1M'"
-//           fill  = Color.Blue
-//         },
-//         BBox ("Following is itemize") (
-//           BItemize {"-> "}
-//             - "hello"
-//             - "new"
-//             - "world"
-//         ),
-//         BBox ("Following is itemize2") (
-//           BItemize
-//             - "hello"
-//             - "new"
-//             - "world"
-//         ),
-//         BBox ("Following is enumerate") (
-//           BEnum {(i: Int) => s"$i: "}
-//             - "hello"
-//             - "new"
-//             - "world"
-//         )
-//       ))
 
+//     fixed.zoompane.group.children.setAll(
+//       BFrame (new Text{
+//                 text  = "Shigure: Extensible Presentation Tool Written in Scala"
+//                 style = "-fx-font: normal 14pt 'Migu 1M'"
+//                 fill  = Color.Blue}) (
+//         BBox ("Following is enumerate")
+//              (BEnum {i => s" $i: "}
+//                 - "hello"
+//                 - "new"
+//                 - "world")
+//              (BVSpace (10.0))
+//              (BItemize {s" -> "}
+//                 - "hello"
+//                 - "new"
+//                 - "world")
+//       ))
 //     scene = new Scene {
 //       root = fixed
 //     }
-//     // val e = new ScriptEngineManager().getEngineByName("scala")
-//     // e.asInstanceOf[scala.tools.nsc.interpreter.IMain].settings.usejavacp.value = true
-//     // e.put("group: Group", group)
-//     // println(e.eval("import scalafx.scene.text._; group.children.add(new Text(\"a\"))"))
 //   }
 // }
 
@@ -76,9 +62,26 @@ object Main extends JFXApp {
   val want_h_mm = 90.0
 
   stage = new PrimaryStage {
-    title = "Scalpre"
+    title = "Shigure"
+    val de = new DevelopEnvironment()
+    de.texts.text.value = """
+val ret = 
+  BFrame ("test") (
+  BBox ("Following is enumerate")
+       (BEnum {i => s" $i: "}
+          - "hello"
+          - "new"
+          - "world")
+       (BVSpace (20))
+       (BItemize {s" -> "}
+          - "hello"
+          - "new"
+          - "world")
+)
+ret
+    """
     scene = new Scene {
-      root = new DevelopEnvironment()
+      root = de
     }
   }
 }

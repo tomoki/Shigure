@@ -10,19 +10,31 @@ import scalafx.scene._
 import scalafx.stage.Screen
 import scalafx.scene.control._
 import scalafx.scene.transform._
+import scalafx.geometry.Orientation
 
 import net.pushl.shigure.beamer._
 import net.pushl.shigure.util.Util
 import net.pushl.shigure.general._
 
 import javax.script.ScriptEngineManager
+import javax.script.ScriptException
 
 class DevelopEnvironment extends SplitPane {
   val fixed = new FixedSizePaddingPane(120, 80)
-  val texts = new TextArea()
+
+  val error = new TextArea {
+    style = "-fx-font: normal 12pt 'monospace'"
+  }
+  val texts = new TextArea {
+    style = "-fx-font: normal 12pt 'monospace'"
+  }
+  val editors = new SplitPane()
+  editors.orientation = Orientation.VERTICAL
+  editors.items.setAll(texts, error)
 
   val e = new ScriptEngineManager().getEngineByName("scala")
-  e.asInstanceOf[scala.tools.nsc.interpreter.IMain].settings.usejavacp.value = true
+  val interpreter = e.asInstanceOf[scala.tools.nsc.interpreter.IMain]
+  interpreter.settings.usejavacp.value = true
 
   import BImplicits._
   def refresh(n: Node): Unit = {
@@ -30,13 +42,20 @@ class DevelopEnvironment extends SplitPane {
     ()
   }
 
+  e.eval("import net.pushl.shigure.beamer._; import net.pushl.shigure.general._; import BImplicits._")
   texts.text.onChange {
-    val ret = e.eval(texts.text.value)
-    println(ret)
-    println(ret.isInstanceOf[Node])
-    if(ret.isInstanceOf[Node])
-      refresh(ret.asInstanceOf[Node])
+    try {
+      val ret = interpreter.eval(texts.text.value)
+      error.text = ret.toString
+      if(ret.isInstanceOf[Node])
+        refresh(ret.asInstanceOf[Node])
+      ()
+    } catch {
+      case ex: ScriptException => {
+        error.text = ex.getMessage()
+      }
+    }
   }
 
-  items.addAll(fixed, texts)
+  items.addAll(fixed, editors)
 }

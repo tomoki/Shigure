@@ -5,6 +5,7 @@ import scalafx.scene.text._
 import scalafx.scene.layout._
 import scalafx.scene.paint._
 import scalafx.scene.control._
+import scalafx.geometry._
 
 import scalafx.scene.layout.AnchorPane
 
@@ -57,11 +58,43 @@ object BEnum {
     new BEnum(ballet)
 }
 
+class BFrame(title: Node) extends VBox {
+  // style = "-fx-background-color: yellow"
+  addItem(title)
+  def addItem(n: Node) : BFrame = {
+    children.add(n)
+    this
+  }
+  def apply(n: Node) : BFrame = addItem(n)
+  def apply(n: => Node) : BFrame = addItem(n)
+}
+
+object BFrame {
+  def apply(title: Node) : BFrame =
+    new BFrame(title)
+}
+
+// FIXME: should be DPI aware.
+class BVSpace(v: Double) extends HBox {
+  val r = new Region()
+  r.minHeight  = v
+  r.maxHeight  = v
+  r.prefHeight = v
+  HBox.setHgrow(r, Priority.Always)
+  children.setAll(r)
+}
+
+object BVSpace {
+  def apply(v: Double) = new BVSpace(v)
+}
+
+class Columns(per: Seq[Double]) extends HBox {
+
+}
+
 import scala.language.implicitConversions
 object BImplicits {
   implicit def convertToTextFlow(s: String) : TextFlow = {
     new TextFlow(new Text(s))
   }
 }
-
-

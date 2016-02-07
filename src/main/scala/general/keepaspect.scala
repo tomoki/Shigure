@@ -23,7 +23,6 @@ class FixedSizePane (width_in_mm  : Double,
   val group = new Group()
   this.setTop(group)
   BorderPane.setMargin(group, Insets(0, 0, 0, 0))
-  style = "-fx-background-color: yellow"
 
   width  onChange { scale(width.value, height.value) }
   height onChange { scale(width.value, height.value) }
