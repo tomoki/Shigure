@@ -9,9 +9,6 @@ import scalafx.geometry._
 
 import scalafx.scene.layout.AnchorPane
 
-object BeamerConstants {
-  val beamerBoxTitle = "beamer-box-title"
-}
 
 class BBox(title: Node) extends VBox {
   style = "-fx-background-color: pink"
@@ -29,8 +26,8 @@ object BBox {
   def apply(title: Node) : BBox =
     new BBox(title)
 }
-
 class BItemize(ballet: => Node) extends VBox {
+  fillWidth = true
   def addItem(n: Node) : BItemize = {
     children.add(new TextFlow(ballet, n))
     this
@@ -60,12 +57,13 @@ object BEnum {
 
 class BFrame(title: Node) extends VBox {
   // style = "-fx-background-color: yellow"
+  fillWidth = true
   addItem(title)
   def addItem(n: Node) : BFrame = {
     children.add(n)
     this
   }
-  def apply(n: Node) : BFrame = addItem(n)
+  def apply(n: Node)    : BFrame = addItem(n)
   def apply(n: => Node) : BFrame = addItem(n)
 }
 
@@ -88,8 +86,48 @@ object BVSpace {
   def apply(v: Double) = new BVSpace(v)
 }
 
-class Columns(per: Seq[Double]) extends HBox {
+class BColumns(per: Seq[Double]) extends GridPane {
+  for(p <- per){
+    val c = new ColumnConstraints()
+    c.setPercentWidth(p * 100) // -> convert to %
+    columnConstraints.add(c)
+  }
+  // TODO: maybe it does not perform covariant conversion
+  // columnConstraints.setAll(per.map(
+  //                            d => {
+  //                              val c =  new ColumnConstraints()
+  //                              c.setPercentWidth(d)
+  //                              c
+  //                            }))
+  def apply(n: Node) : BColumns = {
+    GridPane.setConstraints(n, children.size, 0)
+    children.add(n)
+    this
+  }
+}
 
+object BColumns {
+  def apply(per: Double*) =
+    new BColumns(per)
+}
+
+class BVar(message: String) {
+  var value : Option[Node] = None
+  def :=(n: Node) : Node = {
+    this.value = Some(n)
+    n
+  }
+  def get = value.get
+  override def toString() : String = {
+    "BVar(" + message + ")" + " -> " + value.toString
+  }
+}
+
+object BVar {
+  def apply(s: String) : BVar =
+    new BVar(s)
+  def apply() =
+    new BVar("Not specified")
 }
 
 import scala.language.implicitConversions
