@@ -13,7 +13,6 @@ import scalafx.scene.transform._
 import scalafx.geometry.Orientation
 
 import net.pushl.shigure.beamer._
-import net.pushl.shigure.util.Util
 import net.pushl.shigure.general._
 
 import javax.script.ScriptEngineManager

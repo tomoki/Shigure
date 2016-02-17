@@ -11,34 +11,38 @@ import scalafx.scene._
 import scalafx.stage.Screen
 import scalafx.scene.control._
 import scalafx.scene.transform._
+import scalafx.beans.property._
 
-import scalafx.geometry.Insets 
+import scalafx.geometry.Insets
+import net.pushl.shigure.general._
 
-
-import net.pushl.shigure.util.Util
 
 class FixedSizePane (width_in_mm  : Double,
                      height_in_mm : Double) extends BorderPane {
-
+  style = "-fx-background-color: pink"
   val group = new Group()
   this.setTop(group)
   BorderPane.setMargin(group, Insets(0, 0, 0, 0))
 
-  width  onChange { scale(width.value, height.value) }
-  height onChange { scale(width.value, height.value) }
-
-  def scale(to_width: Double, to_height: Double) : Unit = {
-    group.resize(to_width, to_height)
-    val wpx     = Util.mmToPx(width_in_mm , Screen.primary.dpi).toFloat
-    val hpx     = Util.mmToPx(height_in_mm, Screen.primary.dpi).toFloat
-    val sfactor = (to_width / wpx) min (to_height / hpx)
-
+  val scale_factor = DoubleProperty(calcScaleFactor(width.value, height.value))
+  width  onChange {
+    scale_factor.value = calcScaleFactor(width.value, height.value)
+  }
+  height onChange {
+    scale_factor.value = calcScaleFactor(width.value, height.value)
+  }
+  scale_factor onChange {
     val _ = group.getTransforms().setAll(
-      Transform.scale(sfactor,
-                      sfactor,
+      Transform.scale(scale_factor.value,
+                      scale_factor.value,
                       group.getLayoutBounds.getMinX,
                       group.getLayoutBounds.getMinY)
     )
+  }
+  def calcScaleFactor(w: Double, h: Double) : Double = {
+    val wpx     = Util.mmToPx(width_in_mm , Screen.primary.dpi).toFloat
+    val hpx     = Util.mmToPx(height_in_mm, Screen.primary.dpi).toFloat
+    (w / wpx) min (h / hpx)
   }
 }
 

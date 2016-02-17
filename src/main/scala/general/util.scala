@@ -1,4 +1,4 @@
-package net.pushl.shigure.util
+package net.pushl.shigure.general
 
 object Util {
   // FIXME: We should check this is correct or not...

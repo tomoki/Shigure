@@ -1,9 +1,30 @@
 package net.pushl.shigure.general
 
-// trait SlideTopLevel {
-// }
+import scalafx.beans.property._
 
-// trait       AnchorPane.setTopAnchor(zoompane, (height()-ah)/2)
-//       AnchorPane.setBottomAnchor(zoompane, (height()-ah)/2)
-//       AnchorPane.setLeftAnchor(zoompane, (width()-aw)/2)
-//       AnchorPane.setRightAnchor(zoompane, (width()-aw)/2)
+trait FrameSizeInfo {
+  val width:  ReadOnlyDoubleProperty
+  val height: ReadOnlyDoubleProperty
+  val dpi:    ReadOnlyDoubleProperty
+}
+
+// implicits.
+
+import scala.language.implicitConversions
+object SizeImplicits {
+  implicit class RichDoubleProperty(val self: ReadOnlyDoubleProperty) {
+    def map(f: (Double) => Double) : ReadOnlyDoubleProperty = {
+      val ret = DoubleProperty(f(self.value))
+      self.onChange(ret.value = f(self.value))
+      ret
+    }
+  }
+  implicit class SizeDouble(val self: Double) extends AnyVal {
+    def mm(implicit sizeinfo: FrameSizeInfo) =
+      sizeinfo.dpi.map(d => Util.mmToPx(self, d))
+    def px(implicit sizeinfo: FrameSizeInfo) =
+      DoubleProperty(self)
+    def pt(implicit sizeinfo: FrameSizeInfo) =
+      sizeinfo.dpi.map(d => d * self / 72.0)
+  }
+}

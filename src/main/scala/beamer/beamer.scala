@@ -6,9 +6,13 @@ import scalafx.scene.layout._
 import scalafx.scene.paint._
 import scalafx.scene.control._
 import scalafx.geometry._
+import scalafx.beans.property._
 
 import scalafx.scene.layout.AnchorPane
 
+
+
+import net.pushl.shigure.general._
 
 class BBox(title: Node) extends VBox {
   style = "-fx-background-color: pink"
@@ -55,35 +59,48 @@ object BEnum {
     new BEnum(ballet)
 }
 
-class BFrame(title: Node) extends VBox {
-  // style = "-fx-background-color: yellow"
+class BFrame(title: Option[Node])(sizeinfo: FrameSizeInfo) extends VBox {
+  style = "-fx-background-color: yellow"
+  minWidth  <== sizeinfo.width
+  prefWidth <== sizeinfo.width
+  maxWidth  <== sizeinfo.width
+
+  for(t <- title)
+    addItem(t)
+
   fillWidth = true
-  addItem(title)
   def addItem(n: Node) : BFrame = {
     children.add(n)
     this
   }
-  def apply(n: Node)    : BFrame = addItem(n)
-  def apply(n: => Node) : BFrame = addItem(n)
+  def *(n: Node) : BFrame = addItem(n)
 }
 
 object BFrame {
-  def apply(title: Node) : BFrame =
-    new BFrame(title)
+  def apply(title: Node)(implicit sizeinfo: FrameSizeInfo) : BFrame = {
+    new BFrame(Some(title))(sizeinfo)
+  }
+  def *(n: Node)(implicit sizeinfo: FrameSizeInfo) : BFrame = {
+    (new BFrame(None)(sizeinfo)) * n
+  }
 }
 
+
 // FIXME: should be DPI aware.
-class BVSpace(v: Double) extends HBox {
+class BVSpace(v: ReadOnlyDoubleProperty) extends HBox {
   val r = new Region()
-  r.minHeight  = v
-  r.maxHeight  = v
-  r.prefHeight = v
+  v.onChange {
+    r.minHeight  = v.value
+    r.maxHeight  = v.value
+    r.prefHeight = v.value
+  }
+
   HBox.setHgrow(r, Priority.Always)
   children.setAll(r)
 }
 
 object BVSpace {
-  def apply(v: Double) = new BVSpace(v)
+  def apply(v: ReadOnlyDoubleProperty) = new BVSpace(v)
 }
 
 class BColumns(per: Seq[Double]) extends GridPane {

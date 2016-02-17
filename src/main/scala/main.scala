@@ -10,10 +10,9 @@ import scalafx.scene._
 import scalafx.stage.Screen
 import scalafx.scene.control._
 import scalafx.scene.transform._
+import scalafx.beans.property._
 
 import net.pushl.shigure.beamer._
-import net.pushl.shigure.util.Util
-
 import javax.script.ScriptEngineManager
 
 import net.pushl.shigure.general._
@@ -24,48 +23,65 @@ object Main extends JFXApp {
 
   stage = new PrimaryStage {
     title = "Scalpre"
-
-    width  onChange onScale
-    height onChange onScale
     def onScale() : Unit = {
       fixed.resize(width.value, height.value)
     }
+    import SizeImplicits._
+    width  onChange onScale
+    height onChange onScale
     val fixed = new FixedSizePaddingPane(want_w_mm, want_h_mm)
+
+    implicit val size_info = new {
+      // TODO: should polling which screen we see?
+      val dpi    = DoubleProperty(Screen.primary.dpi)
+      val width  = DoubleProperty(Util.mmToPx(want_w_mm , dpi.value))
+      val height = DoubleProperty(Util.mmToPx(want_h_mm , dpi.value))
+    } with FrameSizeInfo
 
     import BImplicits._
 
+    import scala.language.postfixOps
+
     val l = BVar("left_column")
     val r = BVar("right_column")
-
     fixed.zoompane.group.children.setAll(
-      BFrame (new TextFlow(new Text{
-                text  = "Shigure: Extensible Presentation Tool Written in Scala"
-                style = "-fx-font: normal 14pt 'Migu 1M'"
-                fill  = Color.Blue})) (
-        BColumns(0.5, 0.5)
-                (l := "LLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLL")
-                (r := "RRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRR")
-      )
+      BFrame ("Column sample")
+        * BColumns(0.5, 0.5)
+                  (l := "LLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLL")
+                  (r := "RRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRR")
     )
-    // println(l)
-    // println(r)
+    println(l)
+    println(r)
 
     // fixed.zoompane.group.children.setAll(
     //   BFrame (new Text{
     //             text  = "Shigure: Extensible Presentation Tool Written in Scala"
     //             style = "-fx-font: normal 14pt 'Migu 1M'"
-    //             fill  = Color.Blue}) (
-    //     BBox ("Following is enumerate")
-    //          (BEnum {i => s" $i: "}
-    //             - "Animations are very commonly used in creating good UIs, which is why JavaFX Script had a built-in construct to simplify the creation of animations. ScalaFX has a similar syntax that allows you to quickly and easily create animations, which is used in the ColorfulCircles? example:"
-    //             - "new"
-    //             - "world")
-    //          (BVSpace (10.0))
-    //          (BItemize {s" -> "}
-    //             - "hello"
-    //             - "new"
-    //             - "world")
-    //   ))
+    //             fill  = Color.Blue})
+    //     * "test"
+    // )
+    // fixed.zoompane.group.children.setAll(
+    //   BFrame ("This is title")
+    //     * "test"
+    //     * "aabd"
+    // )
+    // fixed.zoompane.group.children.setAll(
+    //   BFrame (new Text{
+    //             text  = "Shigure: Extensible Presentation Tool Written in Scala"
+    //             style = "-fx-font: normal 14pt 'Migu 1M'"
+    //             fill  = Color.Blue})
+    //     * BBox ("Following is enumerate")
+    //            (BEnum {i => s" $i: "}
+    //               - "hello"
+    //               - "new"
+    //               - "world")
+    //            (BVSpace (14.0 pt))
+    //            (BItemize {s" -> "}
+    //               - "hello"
+    //               - "new"
+    //               - "world")
+    // )
+
     scene = new Scene {
       root = fixed
     }
