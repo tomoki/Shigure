@@ -71,4 +71,6 @@ class FixedSizePaddingPane (width_in_mm  : Double,
     AnchorPane.setLeftAnchor(zoompane,   (to_width-aw)/2)
     AnchorPane.setRightAnchor(zoompane,  (to_width-aw)/2)
   }
+  def set(n: Node) : Unit =
+    zoompane.group.children.setAll(n)
 }

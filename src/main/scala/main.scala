@@ -11,6 +11,7 @@ import scalafx.stage.Screen
 import scalafx.scene.control._
 import scalafx.scene.transform._
 import scalafx.beans.property._
+import scalafx.animation.{Interpolator, Timeline}
 
 import net.pushl.shigure.beamer._
 import javax.script.ScriptEngineManager
@@ -41,29 +42,40 @@ object Main extends JFXApp {
     import BImplicits._
 
     import scala.language.postfixOps
+    import scalafx.Includes._
 
-    val l = BVar("left_column")
-    val r = BVar("right_column")
-    fixed.zoompane.group.children.setAll(
+    val it = BVar[BItemize]("itemiez")
+    val ss = BVar[TextFlow]("src", "souce code")
+    val frame = (
       BFrame ("Column sample")
-        * BColumns(0.5, 0.5)
-                  (l := "LLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLL")
-                  (r := "RRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRR")
+        * (it :=
+             BItemize {"- "}
+             - "one"
+             - "two"
+             - "three")
+        * (BVSpace (14.0 pt))
+        * ss
     )
-    println(l)
-    println(r)
 
-    // fixed.zoompane.group.children.setAll(
+    val timeline = new Timeline {
+      cycleCount = Timeline.Indefinite
+      autoReverse = true
+      keyFrames = Seq(
+        at(1 s) {it(0).opacity -> 0},
+        at(2 s) {it(1).opacity -> 0},
+        at(3 s) {it(2).opacity -> 0}
+      )
+    }
+    timeline.play()
+    fixed.set(frame)
+
+    // // fixed.zoompane
+    // .group.children.setAll(
     //   BFrame (new Text{
     //             text  = "Shigure: Extensible Presentation Tool Written in Scala"
     //             style = "-fx-font: normal 14pt 'Migu 1M'"
     //             fill  = Color.Blue})
     //     * "test"
-    // )
-    // fixed.zoompane.group.children.setAll(
-    //   BFrame ("This is title")
-    //     * "test"
-    //     * "aabd"
     // )
     // fixed.zoompane.group.children.setAll(
     //   BFrame (new Text{

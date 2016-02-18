@@ -10,6 +10,8 @@ import scalafx.beans.property._
 
 import scalafx.scene.layout.AnchorPane
 
+import scalafx.Includes._
+
 
 
 import net.pushl.shigure.general._
@@ -37,6 +39,8 @@ class BItemize(ballet: => Node) extends VBox {
     this
   }
   def -(n: Node) = addItem(n)
+  def apply(n: Int) : Node =
+    children(n)
 }
 
 object BItemize {
@@ -52,6 +56,8 @@ class BEnum(ballet: Int => Node) extends VBox {
     this
   }
   def -(n: Node) = addItem(n)
+  def apply(n: Int) : Node =
+    children(n)
 }
 
 object BEnum {
@@ -109,13 +115,6 @@ class BColumns(per: Seq[Double]) extends GridPane {
     c.setPercentWidth(p * 100) // -> convert to %
     columnConstraints.add(c)
   }
-  // TODO: maybe it does not perform covariant conversion
-  // columnConstraints.setAll(per.map(
-  //                            d => {
-  //                              val c =  new ColumnConstraints()
-  //                              c.setPercentWidth(d)
-  //                              c
-  //                            }))
   def apply(n: Node) : BColumns = {
     GridPane.setConstraints(n, children.size, 0)
     children.add(n)
@@ -128,9 +127,9 @@ object BColumns {
     new BColumns(per)
 }
 
-class BVar(message: String) {
-  var value : Option[Node] = None
-  def :=(n: Node) : Node = {
+class BVar[T <: Node](message: String) {
+  var value : Option[T] = None
+  def :=(n: T) : T = {
     this.value = Some(n)
     n
   }
@@ -141,15 +140,26 @@ class BVar(message: String) {
 }
 
 object BVar {
-  def apply(s: String) : BVar =
-    new BVar(s)
-  def apply() =
-    new BVar("Not specified")
+  def apply[T <: Node](s: String, n: T) : BVar[T] = {
+    val r = new BVar[T](s)
+    r := n
+    r
+  }
+  def apply[T <: Node](s: String) : BVar[T] =
+    new BVar[T](s)
+  def apply[T <: Node]() =
+    new BVar[T]("Not specified")
 }
 
 import scala.language.implicitConversions
 object BImplicits {
   implicit def convertToTextFlow(s: String) : TextFlow = {
     new TextFlow(new Text(s))
+  }
+  implicit def convertToT[T <: Node](v: BVar[T]) : T = {
+    v.value match {
+      case Some(a) => a
+      case None    => sys.error("Can't refer: " + v.toString)
+    }
   }
 }
