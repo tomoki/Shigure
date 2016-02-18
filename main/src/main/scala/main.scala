@@ -13,6 +13,7 @@ import scalafx.scene.transform._
 import scalafx.beans.property._
 import scalafx.animation.{Interpolator, Timeline}
 import javafx.scene.image._
+import scalafx.scene.input._
 
 import net.pushl.shigure.beamer._
 import javax.script.ScriptEngineManager
@@ -77,67 +78,11 @@ object Main extends JFXApp {
         at(3 s) {it(2).opacity -> 0}
       )
     }
-
     timeline.play()
+
     fixed.set(frame)
-
-    // // fixed.zoompane
-    // .group.children.setAll(
-    //   BFrame (new Text{
-    //             text  = "Shigure: Extensible Presentation Tool Written in Scala"
-    //             style = "-fx-font: normal 14pt 'Migu 1M'"
-    //             fill  = Color.Blue})
-    //     * "test"
-    // )
-    // fixed.zoompane.group.children.setAll(
-    //   BFrame (new Text{
-    //             text  = "Shigure: Extensible Presentation Tool Written in Scala"
-    //             style = "-fx-font: normal 14pt 'Migu 1M'"
-    //             fill  = Color.Blue})
-    //     * BBox ("Following is enumerate")
-    //            (BEnum {i => s" $i: "}
-    //               - "hello"
-    //               - "new"
-    //               - "world")
-    //            (BVSpace (14.0 pt))
-    //            (BItemize {s" -> "}
-    //               - "hello"
-    //               - "new"
-    //               - "world")
-    // )
-
     scene = new Scene {
       root = fixed
     }
   }
 }
-
-
-// object Main extends JFXApp {
-//   val want_w_mm = 160.0
-//   val want_h_mm = 90.0
-
-//   stage = new PrimaryStage {
-//     title = "Shigure"
-//     val de = new DevelopEnvironment()
-//     de.texts.text.value = """
-// val ret =
-//   BFrame ("test") (
-//   BBox ("Following is enumerate")
-//        (BEnum {i => s" $i: "}
-//           - "hello"
-//           - "new"
-//           - "world")
-//        (BVSpace (20))
-//        (BItemize {s" -> "}
-//           - "hello"
-//           - "new"
-//           - "world")
-// )
-// ret
-//     """
-//     scene = new Scene {
-//       root = de
-//     }
-//   }
-// }
