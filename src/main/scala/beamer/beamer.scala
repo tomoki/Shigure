@@ -11,10 +11,12 @@ import scalafx.beans.property._
 import scalafx.scene.layout.AnchorPane
 
 import scalafx.Includes._
-
-
-
 import net.pushl.shigure.general._
+
+trait BeamerTheme {
+  val itemize_head:   ()    => Node
+  val enumerate_head: (Int) => Node
+}
 
 class BBox(title: Node) extends VBox {
   style = "-fx-background-color: pink"
@@ -32,22 +34,21 @@ object BBox {
   def apply(title: Node) : BBox =
     new BBox(title)
 }
-class BItemize(ballet: => Node) extends VBox {
+class BItemize(ballet: () => Node) extends VBox {
   fillWidth = true
   def addItem(n: Node) : BItemize = {
-    children.add(new TextFlow(ballet, n))
+    children.add(new TextFlow(ballet(), n))
     this
   }
-  def -(n: Node) = addItem(n)
-  def apply(n: Int) : Node =
-    children(n)
+  def -(n: Node) : BItemize = addItem(n)
+  def apply(n: Int) : Node  = children(n)
 }
 
 object BItemize {
-  def apply(ballet: => Node) : BItemize =
+  def apply(ballet: () => Node) : BItemize =
     new BItemize(ballet)
-  def -(n: Node) : BItemize =
-    new BItemize({new Text("")}).addItem(n)
+  def -(n: Node)(implicit theme: BeamerTheme) : BItemize =
+    apply(theme.itemize_head).addItem(n)
 }
 
 class BEnum(ballet: Int => Node) extends VBox {
@@ -63,6 +64,8 @@ class BEnum(ballet: Int => Node) extends VBox {
 object BEnum {
   def apply(ballet: Int => Node) : BEnum =
     new BEnum(ballet)
+  def -(n: Node)(implicit theme: BeamerTheme) : BEnum =
+    apply(theme.enumerate_head).addItem(n)
 }
 
 class BFrame(title: Option[Node])(sizeinfo: FrameSizeInfo) extends VBox {
@@ -150,6 +153,8 @@ object BVar {
   def apply[T <: Node]() =
     new BVar[T]("Not specified")
 }
+
+
 
 import scala.language.implicitConversions
 object BImplicits {

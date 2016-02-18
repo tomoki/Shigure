@@ -12,6 +12,7 @@ import scalafx.scene.control._
 import scalafx.scene.transform._
 import scalafx.beans.property._
 import scalafx.animation.{Interpolator, Timeline}
+import javafx.scene.image._
 
 import net.pushl.shigure.beamer._
 import javax.script.ScriptEngineManager
@@ -28,33 +29,43 @@ object Main extends JFXApp {
       fixed.resize(width.value, height.value)
     }
     import SizeImplicits._
+    import BImplicits._
+    import scala.language.postfixOps
+    import scalafx.Includes._
+
     width  onChange onScale
     height onChange onScale
     val fixed = new FixedSizePaddingPane(want_w_mm, want_h_mm)
-
     implicit val size_info = new {
-      // TODO: should polling which screen we see?
       val dpi    = DoubleProperty(Screen.primary.dpi)
       val width  = DoubleProperty(Util.mmToPx(want_w_mm , dpi.value))
       val height = DoubleProperty(Util.mmToPx(want_h_mm , dpi.value))
     } with FrameSizeInfo
 
-    import BImplicits._
+    implicit val beamer_theme = new {
+      val itemize_head   = () => new Text("◼ ")
+      val enumerate_head = (i: Int) => new Text((i + 1).toString + ":")
+    } with BeamerTheme
 
-    import scala.language.postfixOps
-    import scalafx.Includes._
+    val image = new ImageView("http://pushl.net/blog/12/yukari_san.png")
+    image.preserveRatio = true
+    image.fitWidth  <== size_info.width
+    image.fitHeight <== size_info.height
 
     val it = BVar[BItemize]("itemiez")
     val ss = BVar[TextFlow]("src", "souce code")
     val frame = (
       BFrame ("Column sample")
         * (it :=
-             BItemize {"- "}
+             BItemize
              - "one"
              - "two"
              - "three")
+        * (BEnum
+             - "1"
+             - "2"
+             - "3")
         * (BVSpace (14.0 pt))
-        * ss
     )
 
     val timeline = new Timeline {
@@ -66,6 +77,7 @@ object Main extends JFXApp {
         at(3 s) {it(2).opacity -> 0}
       )
     }
+
     timeline.play()
     fixed.set(frame)
 
