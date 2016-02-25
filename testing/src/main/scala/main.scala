@@ -73,9 +73,9 @@ object Main extends JFXApp {
           style = "-fx-font-size: 12pt"
           fill  = c})
 
-    class GoodBadItemize extends scalafx.scene.layout.VBox {
+    class ProsConsItemize extends BItemize(() => "") {
       fillWidth = true
-      def addItem(is_good:Boolean)(n: Node) : GoodBadItemize = {
+      def addItem(is_good:Boolean)(n: Node) : ProsConsItemize = {
         val (tex, col) =
           if(is_good) ("✔ ", Color.Green)
           else        ("✘ ", Color.Red)
@@ -84,12 +84,12 @@ object Main extends JFXApp {
                                     fill = col}, n))
         this
       }
-      def -(n: Node) = addItem(false)(n)
+      override def -(n: Node) = addItem(false)(n)
       def +(n: Node) = addItem(true)(n)
     }
-    object GoodBadItemize {
-      def -(n: Node) = (new GoodBadItemize) - n
-      def +(n: Node) = (new GoodBadItemize) + n
+    object ProsConsItemize {
+      def -(n: Node) = (new ProsConsItemize) - n
+      def +(n: Node) = (new ProsConsItemize) + n
     }
 
     // Workaround: I need better way.
@@ -150,7 +150,7 @@ object Main extends JFXApp {
           * (BColumns (picture_ratio, 1-picture_ratio)
                       (BImage(powerpoint_url, size_info.width * picture_ratio))
                     (BBox (boxtitle("  PowerPoint", Color.Black))
-                            (GoodBadItemize
+                            (ProsConsItemize
                                + "Good GUI  -> easy to layout"
                                - "No module -> hard to re-use"
                                - "Can't use with my favorite text editors"
@@ -161,7 +161,7 @@ object Main extends JFXApp {
           * (BColumns (picture_ratio, 1-picture_ratio)
                            (BImage(beamer_url, size_info.width * picture_ratio))
                     (BBox (boxtitle("  LaTeX Beamer", Color.Black))
-                           (GoodBadItemize
+                           (ProsConsItemize
                               + "Can use with my favorite text editors"
                               + "Version control like Git"
                               - "Poor programming language"
@@ -206,23 +206,22 @@ implicit val beamer_theme = new {
   val enumerate_head = (i: Int) => new Text((i + 1).toString + ": ")
 } with BeamerTheme
 
-class GoodBadItemize extends scalafx.scene.layout.VBox {
-  fillWidth = true
-  def addItem(is_good:Boolean)(n: Node) : GoodBadItemize = {
+class ProsConsItemize extends BItemize(() => "") {
+  def addItem(is_good:Boolean)(n: Node) : ProsConsItemize = {
     val (tex, col) =
       if(is_good) ("✔ ", Color.Green)
       else        ("✘ ", Color.Red)
     children.add(new TextFlow(new Text{
-                                text=tex
-                                fill=col}, n))
+                                text = tex
+                                fill = col}, n))
     this
   }
-  def -(n: Node) = addItem(false)(n)
+  override def -(n: Node) = addItem(false)(n)
   def +(n: Node) = addItem(true)(n)
 }
-object GoodBadItemize {
-  def -(n: Node) = (new GoodBadItemize) - n
-  def +(n: Node) = (new GoodBadItemize) + n
+object ProsConsItemize {
+  def -(n: Node) = (new ProsConsItemize) - n
+  def +(n: Node) = (new ProsConsItemize) + n
 }
 
 def frame = {
@@ -315,8 +314,8 @@ frame
       }
       val right = BVar[BBox]()
       val ret = (
-        BFrame (titlize("Example: Good/Bad Itemize Module"))
-          * "We can define a module for Cons/Pros list easily."
+        BFrame (titlize("Example: Pros/Cons Itemize Module"))
+          * "We can define Pros/Cons list as an extension of Itemize"
           * (BColumns (0.5, 0.5)
                       (wrapper)
                       (right := (BBox (textarea)
@@ -330,13 +329,52 @@ frame
       right.get.prefHeight <== (size_info.height - (50 pt))
       ret
     }
-
-    val testing = (
-      BFrame (titlize ("Idea: \"Assert\" in Presentation?"))
-        * "Context-dependent spell check"
-        * "Animation testing"
-        * "Live supports"
-    )
+    def programmingEnvironment : BFrame = {
+      val ret = (
+        BFrame ("Idea: What Do We Need on The Fly?")
+          * "Live programming environment provides runtime information on the fly."
+      )
+      ret
+    }
+    def animation : BFrame = {
+      val ret = (
+        BFrame (titlize ("Idea: \"Assert\" in Presentation?"))
+          * "Context-dependent spell check"
+          * "Animation testing"
+          * "Live supports"
+      )
+      ret
+    }
+    def guiAndText : BFrame = {
+      val ret = (
+        BFrame (titlize ("Idea: \"Assert\" in Presentation?"))
+          * "Context-dependent spell check"
+          * "Animation testing"
+          * "Live supports"
+      )
+      ret
+    }
+    def testing : BFrame = {
+      val ret = (
+        BFrame (titlize ("Idea: \"Assert\" in Presentation?"))
+          * "Context-dependent spell check"
+          * "Animation testing"
+          * "Live supports"
+      )
+      ret
+    }
+    def implementation : BFrame = {
+      val ret = (
+        BFrame (titlize ("Implementation: Shigure, the Prototype"))
+      )
+      ret
+    }
+    def conclusion : BFrame = {
+      val ret = (
+        BFrame (titlize ("Conclusion and Future Work"))
+      )
+      ret
+    }
 
     val frames = Vector(
       titleFrame,
@@ -345,8 +383,12 @@ frame
       problems,
       approach1,
       example,
-      testing
-      // implementation
+      programmingEnvironment,
+      animation,
+      guiAndText,
+      testing,
+      implementation,
+      conclusion
     )
     val current_page = IntegerProperty(0)
     def goNext() : Unit = {
