@@ -245,29 +245,47 @@ frame
       scalafx.scene.layout.VBox.setVgrow(textarea, scalafx.scene.layout.Priority.Always)
 
       val e = new ScriptEngineManager().getEngineByName("scala")
-
       val interpreter = e.asInstanceOf[scala.tools.nsc.interpreter.IMain]
       interpreter.settings.usejavacp.value = true
-      def read_and_refresh() = {
+
+
+      var code_changed_while_evaluating = false
+      var evaluating = false
+      def read_and_refresh() : Unit = {
         val text = textarea.text.value
         import scala.concurrent._
-        import ExecutionContext.Implicits.global 
+        import ExecutionContext.Implicits.global
         Future {
-          refresh(text)
+          if(!evaluating) {
+            evaluating = true
+            for(r <- eval(text)){
+              Platform.runLater {
+                wrapper.children.setAll(r)
+              }}
+            evaluating = false
+            if(code_changed_while_evaluating) {
+              code_changed_while_evaluating = false
+              read_and_refresh()
+            }
+          }else{
+            code_changed_while_evaluating = true
+          }
         }
+        ()
       }
-      def refresh(to_eval: String) = {
+
+      def eval(to_eval: String) : Option[Node] = {
         interpreter.reset()
         try {
           val r = interpreter.eval(to_eval)
           if(r.isInstanceOf[Node])
-            Platform.runLater {
-              wrapper.children.setAll(r.asInstanceOf[Node])
-            }
-          ()
+            Some(r.asInstanceOf[Node])
+          else
+            None
         } catch {
           case ex: ScriptException => {
             Console.err.println(ex.getMessage())
+            None
           }
         }
       }
