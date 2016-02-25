@@ -80,8 +80,8 @@ object Main extends JFXApp {
           if(is_good) ("✔ ", Color.Green)
           else        ("✘ ", Color.Red)
         children.add(new TextFlow(new Text{
-                                    text=tex
-                                    fill=col}, n))
+                                    text = tex
+                                    fill = col}, n))
         this
       }
       def -(n: Node) = addItem(false)(n)
@@ -248,30 +248,28 @@ frame
       val interpreter = e.asInstanceOf[scala.tools.nsc.interpreter.IMain]
       interpreter.settings.usejavacp.value = true
 
-
       var code_changed_while_evaluating = false
-      var evaluating = false
+      val evaluating = BooleanProperty(false)
       def read_and_refresh() : Unit = {
         val text = textarea.text.value
         import scala.concurrent._
         import ExecutionContext.Implicits.global
-        Future {
-          if(!evaluating) {
-            evaluating = true
+        if(evaluating.value) {
+          code_changed_while_evaluating = true
+        }else{
+          evaluating.value = true
+          val _ = Future {
             for(r <- eval(text)){
               Platform.runLater {
                 wrapper.children.setAll(r)
               }}
-            evaluating = false
+            evaluating.value = false
             if(code_changed_while_evaluating) {
               code_changed_while_evaluating = false
               read_and_refresh()
             }
-          }else{
-            code_changed_while_evaluating = true
           }
         }
-        ()
       }
 
       def eval(to_eval: String) : Option[Node] = {
@@ -304,7 +302,6 @@ frame
         ()
       }
 
-
       textarea onKeyReleased = (event: KeyEvent) => {
         event.getCode match {
           case javafx.scene.input.KeyCode.ESCAPE =>
@@ -312,20 +309,25 @@ frame
           case _ => {}
         }
       }
-
+      val indicator = new Text {
+        text = "■"
+        fill <== when (evaluating) choose Color.Green otherwise Color.Red
+      }
       val right = BVar[BBox]()
       val ret = (
         BFrame (titlize("Example: Good/Bad Itemize Module"))
+          * "We can define a module for Cons/Pros list easily."
           * (BColumns (0.5, 0.5)
                       (wrapper)
                       (right := (BBox (textarea)
-                                   (BColumns (0.3, 0.7)
+                                   (BColumns (0.3, 0.7, 0.1)
                                              (evalbutton)
                                              (live_check)
+                                             (indicator)
                                    )))
           )
       )
-      right.get.prefHeight <== (size_info.height - (40 pt))
+      right.get.prefHeight <== (size_info.height - (50 pt))
       ret
     }
 
