@@ -19,7 +19,7 @@ import javax.script.ScriptEngineManager
 import javax.script.ScriptException
 
 class DevelopEnvironment extends SplitPane {
-  val fixed = new FixedSizePaddingPane(120, 80)
+  val fixed = new FixedSizePaddingPane(128, 96)
 
   val error = new TextArea {
     style = "-fx-font: normal 12pt 'monospace'"

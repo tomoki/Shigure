@@ -19,7 +19,6 @@ import net.pushl.shigure.general._
 
 class FixedSizePane (width_in_mm  : Double,
                      height_in_mm : Double) extends BorderPane {
-  style = "-fx-background-color: pink"
   val group = new Group()
   this.setTop(group)
   BorderPane.setMargin(group, Insets(0, 0, 0, 0))
