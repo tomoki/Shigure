@@ -9,6 +9,7 @@ import scalafx.geometry._
 import scalafx.beans.property._
 
 import scalafx.scene.layout.AnchorPane
+import scalafx.animation._
 
 import scalafx.Includes._
 import net.pushl.shigure.general._
@@ -19,7 +20,6 @@ trait BeamerTheme {
 }
 
 class BBox(title: Node) extends VBox {
-  style = "-fx-background-color: pink"
   addItem(title)
 
   def addItem(n: Node) : BBox = {
@@ -69,7 +69,6 @@ object BEnum {
 }
 
 class BFrame(title: Option[Node])(sizeinfo: FrameSizeInfo) extends VBox {
-  style = "-fx-background-color: yellow"
   minWidth  <== sizeinfo.width
   prefWidth <== sizeinfo.width
   maxWidth  <== sizeinfo.width
@@ -98,12 +97,14 @@ object BFrame {
 // FIXME: should be DPI aware.
 class BVSpace(v: ReadOnlyDoubleProperty) extends HBox {
   val r = new Region()
-  v.onChange {
+  def setSize(a: Double) : Unit = {
     r.minHeight  = v.value
     r.maxHeight  = v.value
     r.prefHeight = v.value
   }
 
+  setSize(v.value)
+  v.onChange { setSize(v.value) }
   HBox.setHgrow(r, Priority.Always)
   children.setAll(r)
 }
