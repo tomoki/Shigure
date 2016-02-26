@@ -7,7 +7,9 @@ import scalafx.scene.text.Text
 import scala.tools.nsc.interpreter.IMain
 import javax.script.ScriptEngineManager
 import scala.language.implicitConversions
-import scalafx.scene.Node
+import scalafx.Includes._
+import scalafx.beans.property._
+import scalafx.scene._
 
 trait LInfo {
   def start: Int
@@ -37,7 +39,7 @@ class Itemize extends scalafx.scene.layout.VBox with LInfo{
     this
   }
   def apply(i: Int) : Node with LInfo = {
-    children.get(i).asInstanceOf[Node with LInfo]
+    jfxNode2sfx(children.get(i)).asInstanceOf[Node with LInfo]
   }
 }
 object Itemize {
@@ -46,11 +48,80 @@ object Itemize {
   }
 }
 
+trait Animation {
+  def commit() : Unit
+  def revert() : Unit
+  def isActive() : Boolean
+}
+
+class StringAnimation(prop: StringProperty, to: String)(line: Int) extends Animation with LInfo{
+  def start = line-first_line
+  def end   = line-first_line
+  def isActive() = is_active
+  var is_active = false
+  var saved : Option[String] = None
+  def commit() : Unit =  {
+    saved = Some(prop.value)
+    prop.value = to
+    is_active  = true
+  }
+  def revert() : Unit = {
+    is_active = false
+    saved match {
+      case Some(v) => {
+        prop.value = v
+      }
+      case None => {
+        Console.err.println("Can't revert")
+      }
+    }
+  }
+}
+
+
+implicit def stringTupleToAnimation(p: (StringProperty, String))(implicit line: sourcecode.Line)
+    : StringAnimation = {
+  new StringAnimation(p._1, p._2)(line.value)
+}
+
+class DoubleAnimation(prop: DoubleProperty, to: Double)(line: Int) extends Animation with LInfo{
+  def start = line-first_line
+  def end   = line-first_line
+  var saved : Option[Double] = None
+  var is_active = false
+  def isActive() = is_active
+
+  def commit() : Unit =  {
+    saved = Some(prop.value)
+    prop.value = to
+    is_active  = true
+  }
+  def revert() : Unit = {
+    is_active  = false
+    saved match {
+      case Some(v) => {
+        prop.value = v
+      }
+      case None => {
+        Console.err.println("Can't revert")
+      }
+    }
+  }
+}
+
+implicit def doubleTupleToAnimation(p: (DoubleProperty, Double))(implicit line: sourcecode.Line)
+    : DoubleAnimation = {
+  new DoubleAnimation(p._1, p._2)(line.value)
+}
+
 val items = (Itemize
                - "line 1"
                - "line 2")
-println(items.start)
-println(items.end)
 
-items(0).opacity -> 0
-items
+val scenes : Seq[Animation with LInfo] = Seq(
+  (items(0).opacity, 0.5),
+  (items(1).opacity, 0.64),
+  (items(1).style, "-fx-background-color: Red")
+)
+
+(scenes, items)

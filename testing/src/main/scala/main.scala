@@ -18,14 +18,23 @@ import scalafx.Includes._
 import scalafx.application.{Platform, JFXApp}
 import javafx.scene.image._
 
+import akka.actor.{ Actor, ActorRef, Props }
+import akka.io.{ IO, Tcp }
+import akka.util.ByteString
+import java.net.InetSocketAddress
+import akka.actor.ActorSystem
+import akka.event.Logging
+import scala.language.postfixOps
 
 import javax.script.ScriptEngineManager
 import javax.script.ScriptException
 
 import net.pushl.shigure.general._
 import net.pushl.shigure.beamer._
+import net.pushl.elrpc._
 
 object Main extends JFXApp {
+  val system = ActorSystem("repl-service")
   val want_w_mm = 128.0
   val want_h_mm = 96.0
 
@@ -434,10 +443,115 @@ frame"""
       )
       ret
     }
+
     def animation : BFrame = {
+      import scala.concurrent._
+      import ExecutionContext.Implicits.global
+      val port = 42342
+      val e = new ScriptEngineManager().getEngineByName("scala")
+      val interpreter = e.asInstanceOf[scala.tools.nsc.interpreter.IMain]
+      interpreter.settings.usejavacp.value = true
+      val wrapper    = (new scalafx.scene.layout.VBox())
+      val handler = new net.pushl.elrpc.DefaultHandler {
+        var latestScene : Option[Any] = None
+        // Animation class is only defined in Scala file...
+        def goLine(s: Any, l: Long) : Unit = {
+          import scala.reflect.runtime.{universe => ru}
+          def doSomething(s: Any, b: String) = {
+            try {
+              val m = ru.runtimeMirror(getClass.getClassLoader).reflect(s)
+              val k = m.symbol.typeSignature.member(ru.newTermName(b))
+              Some(m.reflectMethod(k.asMethod))
+            } catch {
+              case scala.ScalaReflectionException(_) => {
+                None
+              }
+            }
+          }
+          for(length  <- doSomething(s, "length");
+              getItem <- doSomething(s, "apply")) {
+            val anims = (0 until length().asInstanceOf[Int]).map((i: Int) => getItem(i))
+            for(a <- anims;
+                s <- doSomething(a, "start");
+                e <- doSomething(a, "end");
+                k <- doSomething(a, "isActive");
+                c <- doSomething(a, "commit");
+                r <- doSomething(a, "revert")){
+              if(s().asInstanceOf[Int] <= l){
+                if(!k().asInstanceOf[Boolean])
+                  c()
+              }else{
+                if(k().asInstanceOf[Boolean])
+                  r()
+              }
+            }
+          }
+        }
+        override def methodsMap = Map(
+          'evalfile -> ((uid: Long, args: SList) => {
+                          args match {
+                            case SList(List(SString(h))) => {
+                              val e = Future {
+                                import java.io._
+                                val reader = new BufferedReader(
+                                  new InputStreamReader(
+                                    new FileInputStream(h)
+                                  )
+                                )
+                                try {
+                                  val comp = interpreter.compile(reader).eval()
+                                  println(comp.toString)
+                                  comp match {
+                                    case (a, b: Node) => {
+                                      Platform.runLater {
+                                        wrapper.children.setAll(b)
+                                      }
+                                      latestScene = Some(a)
+                                      Return(uid, SString(comp.toString))
+                                    }
+                                    case _ =>
+                                      Return(uid, SString("Type error, you must return (a,b)"))
+                                  }
+                                } catch {
+                                  case ex: ScriptException =>
+                                    Return(uid, SString(ex.getMessage()))
+                                  case ex: Throwable =>
+                                    Return(uid, SString(ex.getMessage()))
+                                }
+                              }
+                              List(e)
+                            }
+                            case _ => {
+                              List(Future(Return(uid, SString("command error"))))
+                            }
+                          }
+                        }),
+          'moveline -> ((uid: Long, args: SList) => {
+                      args match {
+                        case SList(List(SInteger(line))) => {
+                          println(latestScene)
+                          println(line)
+                          latestScene match {
+                            case Some(v) => goLine(v, line)
+                            case None    => {}
+                          }
+                          List()
+                        }
+                        case _ =>
+                          List(Future(Return(uid, SString("command error"))))
+                      }
+                    })
+        )
+      }
+      val server = system.actorOf(
+        Props(classOf[Server], port, handler), "belrpc-server")
       val ret = (
         BFrame (titlize ("Environment: Animation Support"))
-          * "This is just mock up, implemented in adhoc way."
+          * "Sync the cursor position and animation"
+          * " (This is just mock up, implemented in adhoc way.)"
+          * ("  memo: start-shigure " + port)
+          * BVSpace (30 pt)
+          * wrapper
       )
       ret
     }
@@ -450,7 +564,7 @@ frame"""
     }
     def testing : BFrame = {
       val ret = (
-        BFrame (titlize ("Idea: \"Assert\" in Presentation?"))
+        BFrame (titlize ("Environment: \"Assert\" in Presentation?"))
           * "Context-dependent spell check?"
           * "Animation testing?"
           * "Live supports"
@@ -505,7 +619,7 @@ frame"""
       example,
       programmingEnvironment,
       animation,
-      guiAndText,
+      // guiAndText,
       testing,
       implementation,
       conclusion
