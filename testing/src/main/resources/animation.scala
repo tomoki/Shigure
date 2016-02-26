@@ -56,6 +56,16 @@ trait Animation {
   def getState() : Int = state
 }
 
+def ✔[A <: Animation](x: A) = {
+  x.state = 2
+  x
+}
+
+def ✘[A <: Animation](x: A) = {
+  x.state = 0
+  x
+}
+
 class StringAnimation(prop: StringProperty, to: String)(line: Int) extends Animation with LInfo{
   def start = line-first_line
   def end   = line-first_line
@@ -120,6 +130,7 @@ implicit def doubleTupleToAnimation(p: (DoubleProperty, Double))(implicit line: 
 val items = (Itemize
                - "line 1"
                - "line 2")
+
 
 val scenes : Seq[Animation with LInfo] = Seq(
   (items(0).opacity, 1.0),

@@ -47,12 +47,26 @@
         (overlay-put ol 'face face)
         ol))))
 
-(defface shigure-evaluated-face
+(defface shigure-evaluated-accepted-face
   '((t :underline (:color "green1")))
   "the animations which was executed")
 
-(defun shigure-put-evaluated (beg end)
-  (shigure-put-face 'shigure-evaluated-face beg end))
+(defface shigure-evaluated-normal-face
+  '((t :underline (:color "blue1")))
+  "the animations which was executed")
+
+(defface shigure-evaluated-declined-face
+  '((t :underline (:color "red1")))
+  "the animations which was executed")
+
+(defun shigure-put-evaluated-normal (beg end)
+  (shigure-put-face 'shigure-evaluated-normal-face beg end))
+
+(defun shigure-put-evaluated-accepted (beg end)
+  (shigure-put-face 'shigure-evaluated-accepted-face beg end))
+
+(defun shigure-put-evaluated-declined (beg end)
+  (shigure-put-face 'shigure-evaluated-declined-face beg end))
 
 (defun shigure-remove-all-overlay ()
   (remove-overlays (point-min) (point-max) 'category 'shigure-face))
@@ -62,16 +76,40 @@
   (save-excursion
     (dolist (elt lines)
       (goto-line (+ 1 (car elt)))
-      (shigure-put-evaluated (line-beginning-position)
-                             (line-end-position)))))
+      (cond
+       ((= (cadr elt) 0)
+        (shigure-put-evaluated-declined (line-beginning-position)
+                                        (line-end-position)))
+       ((= (cadr elt) 1)
+        (shigure-put-evaluated-normal (line-beginning-position)
+                                      (line-end-position)))
+       ((= (cadr elt) 2)
+        (shigure-put-evaluated-accepted (line-beginning-position)
+                                        (line-end-position)))
+       ))))
+
+(defun shigure-accept ()
+  (interactive)
+  (save-excursion
+    (back-to-indentation)
+    (insert "✔")))
+
+(defun shigure-decline ()
+  (interactive)
+  (save-excursion
+    (back-to-indentation)
+    (insert "✘")))
 
 (defun start-shigure (n)
   "client for shigure"
   (interactive "nPort: ")
   (set (make-local-variable 'epc)
        (epc:start-epc-debug n))
+  (evaluate-me)
   (set (make-local-variable 'last-post-command-position)
        0)
+  (define-key (current-local-map) "\C-xa" 'shigure-accept)
+  (define-key (current-local-map) "\C-xd" 'shigure-decline)
   (add-to-list 'post-command-hook #'after-move)
   (add-hook 'after-change-functions (lambda (a b c) (evaluate-me)) t t)
   )
