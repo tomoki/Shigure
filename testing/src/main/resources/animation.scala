@@ -120,8 +120,9 @@ val items = (Itemize
 
 val scenes : Seq[Animation with LInfo] = Seq(
   (items(0).opacity, 0.5),
-  (items(1).opacity, 0.64),
-  (items(1).style, "-fx-background-color: Red")
+  (items(1).opacity, 0.2),
+  (items(0).style, "-fx-background-color: Red"),
+  (items(0).style, "-fx-background-color: Green")
 )
 
 (scenes, items)

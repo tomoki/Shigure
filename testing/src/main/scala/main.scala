@@ -455,7 +455,7 @@ frame"""
       val handler = new net.pushl.elrpc.DefaultHandler {
         var latestScene : Option[Any] = None
         // Animation class is only defined in Scala file...
-        def goLine(s: Any, l: Long) : Unit = {
+        def goLine(s: Any, l: Long) : Vector[Int] = {
           import scala.reflect.runtime.{universe => ru}
           def doSomething(s: Any, b: String) = {
             try {
@@ -468,6 +468,7 @@ frame"""
               }
             }
           }
+          var ret = Vector[Int]()
           for(length  <- doSomething(s, "length");
               getItem <- doSomething(s, "apply")) {
             val anims = (0 until length().asInstanceOf[Int]).map((i: Int) => getItem(i))
@@ -477,7 +478,9 @@ frame"""
                 k <- doSomething(a, "isActive");
                 c <- doSomething(a, "commit");
                 r <- doSomething(a, "revert")){
-              if(s().asInstanceOf[Int] <= l){
+              val h = s().asInstanceOf[Int]
+              if(h <= l){
+                ret = ret :+ h
                 if(!k().asInstanceOf[Boolean])
                   c()
               }else{
@@ -486,6 +489,7 @@ frame"""
               }
             }
           }
+          ret
         }
         override def methodsMap = Map(
           'evalfile -> ((uid: Long, args: SList) => {
@@ -531,11 +535,12 @@ frame"""
                         case SList(List(SInteger(line))) => {
                           println(latestScene)
                           println(line)
-                          latestScene match {
-                            case Some(v) => goLine(v, line)
-                            case None    => {}
+                          val active_lines =
+                            latestScene match {
+                              case Some(v) => goLine(v, line)
+                              case None    => Vector[Int]()
                           }
-                          List()
+                          List(Future(Return(uid, SList(active_lines.toList.map(i => SInteger(i))))))
                         }
                         case _ =>
                           List(Future(Return(uid, SString("command error"))))
