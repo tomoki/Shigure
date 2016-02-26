@@ -170,23 +170,103 @@ object Main extends JFXApp {
                            )
                     ))
           * BVSpace (8 pt)
-          * "(How about markdown, Smalltalk?)"
+          * "(How about markdown, webcomponents, Smalltalk?)"
       )
       ret
     }
+    class QA extends scalafx.scene.layout.VBox {
+      children.add(new Text("Question "))
+      val right_padding = new scalafx.scene.layout.VBox()
+      val columns = (BColumns (0.02, 0.98)
+                              ("")
+                              (right_padding))
+      children.add(columns)
+      def question(question: Node) : QA = {
+        children.set(0, question)
+        this
+      }
+      def answer(answer: Node)     : QA = {
+        right_padding.children.add(answer)
+        this
+      }
+      def content(content: Node)   : QA = {
+        right_padding.children.add(content)
+        this
+      }
+    }
+    class SourceCode extends TextFlow{
+      style="-fx-background-color:#FFFF66;-fx-font-family: monospace"
+      def fromString(s: String) = {
+        this.children.add(new Text(s))
+      }
+    }
+    object SourceCode {
+      def fromString(s: String) : SourceCode = {
+        val ret = new SourceCode()
+        ret.fromString(s)
+        ret
+      }
+      def fromPath(s: String) : SourceCode = {
+        sys.error("Not implemented")
+      }
+    }
     def approach1 : BFrame = {
+      val sql_sample =
+"""SELECT * FROM STATION
+WHERE 50 < (SELECT AVG(TEMP_F) FROM STATS
+WHERE STATION.ID = STATS.ID);"""
+      val bnf_sample =
+"""<expr> ::= <term>|<expr><addop><term>
+<integer> ::= <digit>|<integer><digit>"""
+      val shigure_sample =
+"""BFrame (titlize("About me"))
+  * BVSpace (30 pt)
+  * (BItemize
+      - "name: Tomoki Imai (今井 朝貴)"
+      - "job : Master course student at Tokyo Tech Masuhara.Lab")"""
+
       val ret = (
-        BFrame (titlize("Method: DSL and Live Programming Environment for Presentation in Scala"))
-          * "Scala is a object-oriented and functional programming language."
-          * "(e)DSL := (embedded) Domain Specific Language"
-          * "Live Programming Environment:"
+        BFrame (titlize("Method: EDSL and Live Programming Environment for Presentation in Scala"))
+          * (new QA()
+               .question(boxtitle("Q. What is (E)DSL?", Color.Green))
+               .answer("A. (E)DSL stands for (Embedded) Domain Specific Language")
+               .content(BBox(BVSpace (5 pt))
+                            ("ex1. SQL, DSL for manipulating database (it uses own parser)")
+                            (SourceCode.fromString(sql_sample))
+                            (BVSpace (3 pt))
+                            ("ex2. BNF, DSL for specifying syntax (it uses own parser)")
+                            (SourceCode.fromString(bnf_sample))
+                            (BVSpace (3 pt))
+                            ("ex3. Shigure, EDSL for making slides (uses host language syntax)")
+                            (SourceCode.fromString(shigure_sample))
+             )
+          )
+
+      )
+      ret
+    }
+    def approach2 : BFrame = {
+      val ret = (
+        BFrame (titlize("Method: EDSL and Live Programming Environment for Presentation in Scala"))
+          * (new QA().question(boxtitle("Q. Why Scala (a object-oriented function language)?", Color.Green))
+                     .answer("A. It is well-designed modern language, and I love it :).")
+                     .content((ProsConsItemize
+                                 + "Object-oriented, Functional"
+                                 + "Modularity (package, trait)"
+                                 + "(E)DSL support"
+                                 + "Implicitly"
+                                 + "Macros"
+                                 + "Hot-swapping, interpreters"
+                              )))
+          * (BVSpace (40 pt))
+          * "   I will talk about programming environment later..."
       )
       ret
     }
 
     def example: BFrame = {
-      val init = """
-import net.pushl.shigure.general._
+      val init =
+"""import net.pushl.shigure.general._
 import net.pushl.shigure.beamer._
 import scalafx.beans.property._
 import scalafx.scene.text._
@@ -234,8 +314,7 @@ def frame = {
   )
   ret
 }
-frame
-"""
+frame"""
       val textarea   = (new TextArea(init))
       textarea.style = "-fx-font-family: monospace"
       textarea.focusTraversable = false
@@ -265,22 +344,29 @@ frame
             evaluating.value = false
             if(code_changed_while_evaluating) {
               code_changed_while_evaluating = false
-              read_and_refresh()
+              Platform.runLater {
+                read_and_refresh()
+              }
             }
           }
         }
       }
 
       def eval(to_eval: String) : Option[Node] = {
-        interpreter.reset()
         try {
-          val r = interpreter.eval(to_eval)
+          val r = interpreter.compile(to_eval).eval()
           if(r.isInstanceOf[Node])
             Some(r.asInstanceOf[Node])
-          else
+          else {
+            Console.err.println("result is not Node")
             None
+          }
         } catch {
           case ex: ScriptException => {
+            Console.err.println(ex.getMessage())
+            None
+          }
+          case ex: Throwable => {
             Console.err.println(ex.getMessage())
             None
           }
@@ -310,14 +396,26 @@ frame
       }
       val indicator = new Text {
         text = "■"
-        fill <== when (evaluating) choose Color.Green otherwise Color.Red
+        fill = Color.Red
+      }
+      evaluating onChange {
+        Platform.runLater {
+          if(evaluating.value)
+            indicator.fill = Color.Green
+          else
+            indicator.fill = Color.Red
+        }
       }
       val right = BVar[BBox]()
       val ret = (
         BFrame (titlize("Example: Pros/Cons Itemize Module"))
-          * "We can define Pros/Cons list as an extension of Itemize"
+          * "We can define Pros/Cons list as an extension of Itemize."
           * (BColumns (0.5, 0.5)
-                      (wrapper)
+                      (BBox
+                         ("↓ frame will appear here↓")
+                         (BVSpace (20 pt))
+                         (wrapper)
+                      )
                       (right := (BBox (textarea)
                                    (BColumns (0.3, 0.7, 0.1)
                                              (evalbutton)
@@ -331,34 +429,30 @@ frame
     }
     def programmingEnvironment : BFrame = {
       val ret = (
-        BFrame ("Idea: What Do We Need on The Fly?")
+        BFrame (titlize ("Environment: What Do We Need on The Fly?"))
           * "Live programming environment provides runtime information on the fly."
       )
       ret
     }
     def animation : BFrame = {
       val ret = (
-        BFrame (titlize ("Idea: \"Assert\" in Presentation?"))
-          * "Context-dependent spell check"
-          * "Animation testing"
-          * "Live supports"
+        BFrame (titlize ("Environment: Animation Support"))
+          * "This is just mock up, implemented in adhoc way."
       )
       ret
     }
     def guiAndText : BFrame = {
       val ret = (
-        BFrame (titlize ("Idea: \"Assert\" in Presentation?"))
-          * "Context-dependent spell check"
-          * "Animation testing"
-          * "Live supports"
+        BFrame (titlize ("Idea: GUI to Text, Text to GUI"))
+          * "This is just mock up, implemented in adhoc way."
       )
       ret
     }
     def testing : BFrame = {
       val ret = (
         BFrame (titlize ("Idea: \"Assert\" in Presentation?"))
-          * "Context-dependent spell check"
-          * "Animation testing"
+          * "Context-dependent spell check?"
+          * "Animation testing?"
           * "Live supports"
       )
       ret
@@ -370,8 +464,33 @@ frame
       ret
     }
     def conclusion : BFrame = {
+      def genBallet(c: Color) = () => new Text{
+        text = "■ "
+        fill = Color.Green
+      }
       val ret = (
         BFrame (titlize ("Conclusion and Future Work"))
+          * (BBox (boxtitle("Conclusion", Color.Green))
+                  (BColumns (0.025, 0.975)
+                            ("")
+                            (BBox ("I want modular/live programming environment for Presentation!")
+                                  (BItemize (genBallet(Color.Green))
+                                     - "Well-designed programming language Scala"
+                                     - "EDSL for easy layout"
+                                     - "Re-use existing tools for Scala")))
+          )
+          * BVSpace (30 pt)
+          * (BBox (boxtitle("Future Work", Color.Green))
+                  (BColumns (0.025, 0.975)
+                            ("")
+                            (BBox ("There are some work to make it \"usable.\"")
+                                  (BItemize (genBallet(Color.Green))
+                                     - "Animation framework"
+                                     - "DSL for graphics"
+                                     - "Complete bridge for Emacs"
+                                     - "How to inject source code information to existing classes?"
+                                     )))
+          )
       )
       ret
     }
@@ -382,6 +501,7 @@ frame
       caution,
       problems,
       approach1,
+      approach2,
       example,
       programmingEnvironment,
       animation,

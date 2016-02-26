@@ -5,6 +5,7 @@ val common_settings = Seq(
   libraryDependencies += "org.scala-lang" % "scala-compiler" % scalaVersion.value,
   libraryDependencies += "org.scala-lang" % "scala-library"  % scalaVersion.value,
   libraryDependencies += "org.scalafx" %% "scalafx" % "8.0.60-R9",
+  libraryDependencies += "com.lihaoyi" %% "sourcecode" % "0.1.0",
   scalaVersion := "2.11.7",
   scalacOptions ++= Seq(
     "-deprecation",
