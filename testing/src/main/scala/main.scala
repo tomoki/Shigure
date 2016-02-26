@@ -64,7 +64,10 @@ object Main extends JFXApp {
     } with FrameSizeInfo
 
     implicit val beamer_theme = new {
-      val itemize_head   = () => new Text("◼ ")
+      val itemize_head   = () => new Text {
+        text = "◼ "
+        fill = Color.Blue
+      }
       val enumerate_head = (i: Int) => new Text((i + 1).toString + ": ")
     } with BeamerTheme
 
@@ -124,11 +127,33 @@ object Main extends JFXApp {
     }
 
     def aboutMe : BFrame = {
+      val shiranui_url = getClass.getResource("/shiranui.png").toURI().toString
+      val yukari_url   = getClass.getResource("/yukari.png").toURI().toString
+      val coq_url      = getClass.getResource("/coq_live.png").toURI().toString
       val ret = (
         BFrame (titlize("About me"))
           * (BItemize
-               - "name: Tomoki Imai (今井 朝貴)"
-               - "job : Master course student at Tokyo Tech Masuhara.Lab")
+               - "Tomoki Imai (今井 朝貴)"
+               - "Master course student at Tokyo Tech, Masuhara lab")
+          * (BBox (boxtitle ("My works: Making programming fun and easier", Color.Green))
+                  (BColumns (0.5, 0.5)
+                            (BBox ("Test and live programming")
+                                  (BImage(shiranui_url, size_info.width * 0.45))
+                                  ("Live feedback for proof assistants")
+                                  (BImage(coq_url, size_info.width * 0.45))
+                            )
+                            (BBox ("Real-world programming with VR")
+                                  (BImage(yukari_url, size_info.width * 0.45))
+                                  ("I'm also interested in...")
+                                  (BItemize
+                                     - "modular programming"
+                                     - "functional programming"
+                                     - "high-performance programming"
+                                     - "machine-learning")
+                                  ("↑ I think, they need better programming experience :)")
+
+                            )
+                  ))
       )
       ret
     }
@@ -137,7 +162,7 @@ object Main extends JFXApp {
       val ret = (
         BFrame (titlize(""))
           * BVSpace (50 pt)
-          * "I will talk about just ideas."
+          * "I will talk about work I just started."
           * (BItemize (() => " => ")
                - "Most of features are not implemented yet."
                - "We need your feedback :)")
@@ -162,7 +187,7 @@ object Main extends JFXApp {
                             (ProsConsItemize
                                + "Good GUI  -> easy to layout"
                                - "No module -> hard to re-use"
-                               - "Can't use with my favorite text editors"
+                               - "Poor text editors"
                                - "Poor animation tool (low-level operation)"
                             ))
           )
@@ -172,7 +197,7 @@ object Main extends JFXApp {
                     (BBox (boxtitle("  LaTeX Beamer", Color.Black))
                            (ProsConsItemize
                               + "Can use with my favorite text editors"
-                              + "Version control like Git"
+                              + "Can use version control like Git"
                               - "Poor programming language"
                               - "Hard to make graphical presentation"
                               - "Limitation of PDF"
@@ -268,7 +293,6 @@ WHERE STATION.ID = STATS.ID);"""
                                  + "Hot-swapping, interpreters"
                               )))
           * (BVSpace (40 pt))
-          * "   I will talk about programming environment later..."
       )
       ret
     }
@@ -455,7 +479,7 @@ frame"""
       val handler = new net.pushl.elrpc.DefaultHandler {
         var latestScene : Option[Any] = None
         // Animation class is only defined in Scala file...
-        def goLine(s: Any, l: Long) : Vector[Int] = {
+        def goLine(s: Any, l: Long) : Vector[(Int, Int)] = {
           import scala.reflect.runtime.{universe => ru}
           def doSomething(s: Any, b: String) = {
             try {
@@ -468,7 +492,7 @@ frame"""
               }
             }
           }
-          var ret = Vector[Int]()
+          var ret = Vector[(Int, Int)]()
           for(length  <- doSomething(s, "length");
               getItem <- doSomething(s, "apply")) {
             val anims = (0 until length().asInstanceOf[Int]).map((i: Int) => getItem(i))
@@ -477,10 +501,11 @@ frame"""
                 e <- doSomething(a, "end");
                 k <- doSomething(a, "isActive");
                 c <- doSomething(a, "commit");
-                r <- doSomething(a, "revert")){
+                r <- doSomething(a, "revert");
+                g <- doSomething(a, "getState")){
               val h = s().asInstanceOf[Int]
               if(h <= l){
-                ret = ret :+ h
+                ret = ret :+ ((h, g().asInstanceOf[Int]))
                 if(!k().asInstanceOf[Boolean])
                   c()
               }else{
@@ -538,9 +563,11 @@ frame"""
                           val active_lines =
                             latestScene match {
                               case Some(v) => goLine(v, line)
-                              case None    => Vector[Int]()
-                          }
-                          List(Future(Return(uid, SList(active_lines.toList.map(i => SInteger(i))))))
+                              case None    => Vector[(Int,Int)]()
+                            }
+                          List(Future(Return(uid, SList(active_lines.toList.map({
+                                                                                  case (a,b) => SList(List(SInteger(a), SInteger(b)))
+                                                                                })))))
                         }
                         case _ =>
                           List(Future(Return(uid, SString("command error"))))
@@ -552,33 +579,98 @@ frame"""
         Props(classOf[Server], port, handler), "belrpc-server")
       val ret = (
         BFrame (titlize ("Environment: Animation Support"))
-          * "Sync the cursor position and animation"
-          * " (This is just mock up, implemented in adhoc way.)"
-          * ("  memo: start-shigure " + port)
-          * BVSpace (30 pt)
-          * wrapper
+          * (new QA()
+               .question(boxtitle("Sync the cursor position and the animation.", Color.Green))
+               .answer(BItemize
+                         - "Reduce the gap between checking and writing animations.")
+               .content(""))
+          * (" Demo. (Just proof of concept, implemented in an ugly way.)")
+          * (BColumns (0.5, 0.5)
+                      (BBox
+                         ("↓ frame will appear here↓")
+                         (wrapper))
+                      (BBox
+                         (BVSpace (50 pt))
+                         ("Emacs (TCP: " + port + ")")
+                         (BVSpace (50 pt))
+                      ))
       )
       ret
     }
-    def guiAndText : BFrame = {
+    def testing1 : BFrame = {
+      val sep = BVSpace (2 pt)
+      val sep1 = BVSpace (1 pt)
+      sep.style = "-fx-background-color: Black"
+      sep1.style = sep.style.value
+
+      val frame_source =
+"""(BBox (titlize("this is title"))
+      ("Following is itemize.")
+      (BItemize
+        - "item 1"
+))"""
+      val warn_source =
+""""this is title" => "This is Title"
+"Following is itemize"
+  => "Following is itemize:"
+"item 1" => "Item 1""""
       val ret = (
-        BFrame (titlize ("Idea: GUI to Text, Text to GUI"))
-          * "This is just mock up, implemented in adhoc way."
+        BFrame (titlize ("Environment: \"Validate\" the Presentation?"))
+          * " This is not implemented yet. Just idea."
+          * (new QA()
+               .question(boxtitle("Context-dependent syntax/spell check?", Color.Green))
+               .answer("Spell/syntax check should know its own \"context.\"")
+               .content(BItemize
+                          - "Itemize can ignore the syntax a little?"
+                          - "Is it title? If so, it should look like \"This is a Title \""
+                          - "It define new keyword? We should make it bold or italic."
+                          - "(Should we check statically?)"
+             )
+          )
+          * sep
+          * (BColumns (0.5, 0.5)
+                      (BBox ("↓ rendered ↓")
+                            (BBox (titlize("this is title"))
+                                  ("Following is itemize.")
+                                  (BItemize
+                                     - "item 1"
+                                  )))
+                      (BBox ("↓ source code ↓")
+                            (SourceCode.fromString(frame_source))
+                            (sep1)
+                            ("↓ syntax checker ↓")
+                            (SourceCode.fromString(warn_source)))
+
+          )
       )
       ret
     }
-    def testing : BFrame = {
+    def testing2 : BFrame = {
       val ret = (
-        BFrame (titlize ("Environment: \"Assert\" in Presentation?"))
-          * "Context-dependent spell check?"
-          * "Animation testing?"
-          * "Live supports"
+        BFrame (titlize ("Environment: \"Validate\" the Presentation?"))
+          * (new QA()
+               .question(boxtitle("Q. How about tests for animation?", Color.Green))
+               .answer("A. Generally speaking, it is hard to write tests by hands.")
+               .content(" => \"Promoting\" or \"fixing\" can be good alternative.")
+          )
       )
       ret
     }
     def implementation : BFrame = {
+      val impl_url = getClass.getResource("/impl.png").toURI().toString
       val ret = (
         BFrame (titlize ("Implementation: Shigure, the Prototype"))
+          * (BItemize
+               - "ScalaFX (JavaFX) for GUI"
+               - "Macro to inject sourcecode information"
+               - "This slide have 700 LoC in Scala (most of it is example part)."
+               - "Scala Emacs RPC for communicate (https://github.com/tomoki/Scala-elrpc)"
+          )
+          * (BColumns (0.1, 0.8, 0.1)
+                      ("")
+                      (BImage(impl_url, size_info.width * 0.8))
+                      ("")
+          )
       )
       ret
     }
@@ -592,11 +684,12 @@ frame"""
           * (BBox (boxtitle("Conclusion", Color.Green))
                   (BColumns (0.025, 0.975)
                             ("")
-                            (BBox ("I want modular/live programming environment for Presentation!")
+                            (BBox ("Shigure: modular/live programming environment for Presentation")
                                   (BItemize (genBallet(Color.Green))
                                      - "Well-designed programming language Scala"
-                                     - "EDSL for easy layout"
-                                     - "Re-use existing tools for Scala")))
+                                     - "EDSL, extensible and easy to write"
+                                     - "Live programming for animation"
+                                     - "Validate presentation")))
           )
           * BVSpace (30 pt)
           * (BBox (boxtitle("Future Work", Color.Green))
@@ -607,7 +700,8 @@ frame"""
                                      - "Animation framework"
                                      - "DSL for graphics"
                                      - "Complete bridge for Emacs"
-                                     - "How to inject source code information to existing classes?"
+                                     - "Generate code from GUI"
+                                     - "Inject sourcecode information to existing classes?"
                                      )))
           )
       )
@@ -622,10 +716,9 @@ frame"""
       approach1,
       approach2,
       example,
-      programmingEnvironment,
       animation,
-      // guiAndText,
-      testing,
+      testing1,
+      testing2,
       implementation,
       conclusion
     )

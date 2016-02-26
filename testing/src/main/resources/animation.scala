@@ -52,6 +52,8 @@ trait Animation {
   def commit() : Unit
   def revert() : Unit
   def isActive() : Boolean
+  var state = 1
+  def getState() : Int = state
 }
 
 class StringAnimation(prop: StringProperty, to: String)(line: Int) extends Animation with LInfo{
@@ -114,15 +116,15 @@ implicit def doubleTupleToAnimation(p: (DoubleProperty, Double))(implicit line: 
   new DoubleAnimation(p._1, p._2)(line.value)
 }
 
+
 val items = (Itemize
                - "line 1"
                - "line 2")
 
 val scenes : Seq[Animation with LInfo] = Seq(
-  (items(0).opacity, 0.5),
+  (items(0).opacity, 1.0),
   (items(1).opacity, 0.2),
-  (items(0).style, "-fx-background-color: Red"),
-  (items(0).style, "-fx-background-color: Green")
+  (items(0).style, "-fx-background-color: Red")
 )
 
 (scenes, items)

@@ -61,7 +61,7 @@
   (shigure-remove-all-overlay)
   (save-excursion
     (dolist (elt lines)
-      (goto-line (+ 1 elt))
+      (goto-line (+ 1 (car elt)))
       (shigure-put-evaluated (line-beginning-position)
                              (line-end-position)))))
 
