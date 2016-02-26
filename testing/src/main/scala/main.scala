@@ -144,13 +144,12 @@ object Main extends JFXApp {
                             )
                             (BBox ("Real-world programming with VR")
                                   (BImage(yukari_url, size_info.width * 0.45))
-                                  ("I'm also interested in...")
                                   (BItemize
                                      - "modular programming"
                                      - "functional programming"
                                      - "high-performance programming"
                                      - "machine-learning")
-                                  ("↑ I think, they need better programming experience :)")
+                                  ("↑ They need better programming experience :)")
 
                             )
                   ))
@@ -646,6 +645,114 @@ frame"""
       ret
     }
     def testing2 : BFrame = {
+      import scala.concurrent._
+      import ExecutionContext.Implicits.global
+      val port = 42344
+      val e = new ScriptEngineManager().getEngineByName("scala")
+      val interpreter = e.asInstanceOf[scala.tools.nsc.interpreter.IMain]
+      interpreter.settings.usejavacp.value = true
+      val wrapper    = (new scalafx.scene.layout.VBox())
+      val handler = new net.pushl.elrpc.DefaultHandler {
+        var latestScene : Option[Any] = None
+        // Animation class is only defined in Scala file...
+        def goLine(s: Any, l: Long) : Vector[(Int, Int)] = {
+          import scala.reflect.runtime.{universe => ru}
+          def doSomething(s: Any, b: String) = {
+            try {
+              val m = ru.runtimeMirror(getClass.getClassLoader).reflect(s)
+              val k = m.symbol.typeSignature.member(ru.newTermName(b))
+              Some(m.reflectMethod(k.asMethod))
+            } catch {
+              case scala.ScalaReflectionException(_) => {
+                None
+              }
+            }
+          }
+          var ret = Vector[(Int, Int)]()
+          for(length  <- doSomething(s, "length");
+              getItem <- doSomething(s, "apply")) {
+            val anims = (0 until length().asInstanceOf[Int]).map((i: Int) => getItem(i))
+            for(a <- anims;
+                s <- doSomething(a, "start");
+                e <- doSomething(a, "end");
+                k <- doSomething(a, "isActive");
+                c <- doSomething(a, "commit");
+                r <- doSomething(a, "revert");
+                g <- doSomething(a, "getState")){
+              val h = s().asInstanceOf[Int]
+              if(h <= l){
+                ret = ret :+ ((h, g().asInstanceOf[Int]))
+                if(!k().asInstanceOf[Boolean])
+                  c()
+              }else{
+                if(k().asInstanceOf[Boolean])
+                  r()
+              }
+            }
+          }
+          ret
+        }
+        override def methodsMap = Map(
+          'evalfile -> ((uid: Long, args: SList) => {
+                          args match {
+                            case SList(List(SString(h))) => {
+                              val e = Future {
+                                import java.io._
+                                val reader = new BufferedReader(
+                                  new InputStreamReader(
+                                    new FileInputStream(h)
+                                  )
+                                )
+                                try {
+                                  val comp = interpreter.compile(reader).eval()
+                                  println(comp.toString)
+                                  comp match {
+                                    case (a, b: Node) => {
+                                      Platform.runLater {
+                                        wrapper.children.setAll(b)
+                                      }
+                                      latestScene = Some(a)
+                                      Return(uid, SString(comp.toString))
+                                    }
+                                    case _ =>
+                                      Return(uid, SString("Type error, you must return (a,b)"))
+                                  }
+                                } catch {
+                                  case ex: ScriptException =>
+                                    Return(uid, SString(ex.getMessage()))
+                                  case ex: Throwable =>
+                                    Return(uid, SString(ex.getMessage()))
+                                }
+                              }
+                              List(e)
+                            }
+                            case _ => {
+                              List(Future(Return(uid, SString("command error"))))
+                            }
+                          }
+                        }),
+          'moveline -> ((uid: Long, args: SList) => {
+                      args match {
+                        case SList(List(SInteger(line))) => {
+                          println(latestScene)
+                          println(line)
+                          val active_lines =
+                            latestScene match {
+                              case Some(v) => goLine(v, line)
+                              case None    => Vector[(Int,Int)]()
+                            }
+                          List(Future(Return(uid, SList(active_lines.toList.map({
+                                                                                  case (a,b) => SList(List(SInteger(a), SInteger(b)))
+                                                                                })))))
+                        }
+                        case _ =>
+                          List(Future(Return(uid, SString("command error"))))
+                      }
+                    })
+        )
+      }
+      val server = system.actorOf(
+        Props(classOf[Server], port, handler), "belrpc-server2")
       val ret = (
         BFrame (titlize ("Environment: \"Validate\" the Presentation?"))
           * (new QA()
@@ -653,7 +760,16 @@ frame"""
                .answer("A. Generally speaking, it is hard to write tests by hands.")
                .content(" => \"Promoting\" or \"fixing\" can be good alternative.")
           )
-      )
+          * "(Current implementation does not gurantee anything, it just shows mark.)"
+          * (BColumns (0.5, 0.5)
+                      (BBox
+                         ("↓ frame will appear here↓")
+                         (wrapper))
+                      (BBox
+                         (BVSpace (50 pt))
+                         ("Emacs (TCP: " + port + ")")
+                         (BVSpace (50 pt))
+                      )))
       ret
     }
     def implementation : BFrame = {
