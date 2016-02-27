@@ -243,6 +243,23 @@ object Main extends JFXApp {
         sys.error("Not implemented")
       }
     }
+    def approach : BFrame = {
+      val ret = (
+        BFrame (titlize("Method: EDSL and Live Programming Environment for Presentation in Scala"))
+          * (BVSpace(20 pt))
+          * (new QA()
+               .question(boxtitle("Q. What I need?", Color.Green))
+               .answer((ProsConsItemize
+                          + "Good programming language"
+                          + "Good GUI"
+                          + "Go well with my favorite editors"
+                          + "Better animation tools"))
+               .content(BBox(BVSpace(20 pt))
+                            ("=> EDSL and live programming environment for Scala"))
+          )
+      )
+      ret
+    }
     def approach1 : BFrame = {
       val sql_sample =
 """SELECT * FROM STATION
@@ -256,8 +273,7 @@ WHERE STATION.ID = STATS.ID);"""
   * BVSpace (30 pt)
   * (BItemize
       - "name: Tomoki Imai (今井 朝貴)"
-      - "job : Master course student at Tokyo Tech Masuhara.Lab")"""
-
+      - "job : Master course student at Tokyo Tech, Masuhara.Lab")"""
       val ret = (
         BFrame (titlize("Method: EDSL and Live Programming Environment for Presentation in Scala"))
           * (new QA()
@@ -274,21 +290,21 @@ WHERE STATION.ID = STATS.ID);"""
                             (SourceCode.fromString(shigure_sample))
              )
           )
-
       )
       ret
     }
     def approach2 : BFrame = {
       val ret = (
         BFrame (titlize("Method: EDSL and Live Programming Environment for Presentation in Scala"))
+          * (BVSpace (30 pt))
           * (new QA().question(boxtitle("Q. Why Scala (a object-oriented function language)?", Color.Green))
                      .answer("A. It is well-designed modern language, and I love it :).")
                      .content((ProsConsItemize
                                  + "Object-oriented, Functional"
-                                 + "Modularity (package, trait)"
-                                 + "(E)DSL support"
-                                 + "Implicitly"
-                                 + "Macros"
+                                 + "Modularity"
+                                 + "EDSL support"
+                                 + "Implicit conversions/parameters"
+                                 + "Macros (we can define own markup language?)"
                                  + "Hot-swapping, interpreters"
                               )))
           * (BVSpace (40 pt))
@@ -779,8 +795,8 @@ frame"""
           * (BItemize
                - "ScalaFX (JavaFX) for GUI"
                - "Macro to inject sourcecode information"
-               - "This slide have 700 LoC in Scala (most of it is example part)."
-               - "Scala Emacs RPC for communicate (https://github.com/tomoki/Scala-elrpc)"
+               - "This slide have 800 LoC in Scala (lots of copy-paste...)"
+               - "Scala Emacs-RPC for communicate (github.com/tomoki/Scala-elrpc)"
           )
           * (BColumns (0.1, 0.8, 0.1)
                       ("")
@@ -805,9 +821,10 @@ frame"""
                                      - "Well-designed programming language Scala"
                                      - "EDSL, extensible and easy to write"
                                      - "Live programming for animation"
-                                     - "Validate presentation")))
+                                     - "Validate presentation"
+                                  )))
           )
-          * BVSpace (30 pt)
+          * BVSpace (10 pt)
           * (BBox (boxtitle("Future Work", Color.Green))
                   (BColumns (0.025, 0.975)
                             ("")
@@ -820,6 +837,8 @@ frame"""
                                      - "Inject sourcecode information to existing classes?"
                                      )))
           )
+          * BVSpace (10 pt)
+          * "It is more difficult than I expected to design modular extensible datatypes."
       )
       ret
     }
@@ -829,6 +848,7 @@ frame"""
       aboutMe,
       caution,
       problems,
+      approach,
       approach1,
       approach2,
       example,
